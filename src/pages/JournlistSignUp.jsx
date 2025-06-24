@@ -112,7 +112,7 @@ console.log('Sending data:', formData);
  
    
    
-  window.localStorage.setItem('name', journalist);
+  window.localStorage.setItem('name', journalist.fullName);
   window.localStorage.setItem('email', journalist.email);
   window.localStorage.setItem('phone', journalist.phone);
   window.localStorage.setItem('pressCard', journalist.pressCard);
