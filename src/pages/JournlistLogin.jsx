@@ -51,6 +51,7 @@ const JournalistLogin = () => {
         setSuccess(true);
         window.localStorage.setItem("email", response.data.journalist.email);
         window.localStorage.setItem("id", response.data.journalist.id);
+window.localStorage.setItem("id", response.data.journalist.userName);
         window.localStorage.setItem("isLoggedIn", "true");
       }
     } catch (error) {
