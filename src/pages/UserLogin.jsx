@@ -42,13 +42,14 @@ const UserLogin = () => {
 
     try {
       const response = await instacAxios.post("/api/auth/login", credentials);
-      const { accessToken, _id, success } = response.data;
+      const { accessToken, _id, success ,userName }= response.data;
 
       if (success && accessToken) {
         window.localStorage.setItem("token", accessToken);
         window.localStorage.setItem("email", credentials.email);
         window.localStorage.setItem("id", credentials._id || "5656506566048889" ); // Save the name to local storage
         window.localStorage.setItem("login", "true");
+        window.localStorage.setItem("name",credentials.userName ||"user")
 
         setUserEmail(credentials.email);
        
