@@ -110,7 +110,7 @@ const ContactUs = () => {
   };
 
   const handleLogin = () => {
-    navigate('/user-login');
+    navigate('/Journlist-login');
   };
 
   return (
