@@ -5,7 +5,7 @@ import instanceAxios from '../components/Axios/Axios';
 const NewsList = () => {
   const navigate = useNavigate();
   const [news, setNews] = useState([]);
-  const [newsToDelete, setNewsToDelete] = useState(null);
+  const [newsToDelete, setNewsToDelete] = useState(null); // لتخزين id الخبر المراد حذفه مؤقتاً
   const [editingNews, setEditingNews] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,80 +64,69 @@ const NewsList = () => {
     }));
   };
 
-
-  //   try {
-  //     setIsLoading(true);
-  //     const response = await instanceAxios.put(`/api/news/${id}`, editFormData);
+  const saveEdit = async (id) => {
+    try {
+      setIsLoading(true);
+      const response = await instanceAxios.put(`/api/news/${id}`, editFormData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
-  //     if (response.data.success) {
-  //       // Update the news list with edited news
-  //       setNews(news.map(item => 
-  //         item._id === id ? { ...item, ...editFormData } : item
-  //       ));
-  //       setEditingNews(null);
-  //     } else {
-  //       setError(response.data.message || 'فشل في تحديث الخبر.');
-  //     }
-  //   } catch (error) {
-  //     console.error('فشل في تحديث الخبر:', error);
-  //     setError(error.response?.data?.message || 'حدث خطأ أثناء تحديث الخبر.');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-const saveEdit = async (id) => {
-  try {
-    setIsLoading(true);
-    const response = await instanceAxios.put(`/api/news/${id}`, editFormData, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (response.data.success) {
-      // Update the news list with edited news
-      setNews(news.map(item => 
-        item._id === id ? { ...item, ...editFormData } : item
-      ));
-      setEditingNews(null);
-      setError('');
-    } else {
-      setError(response.data.message || 'فشل في تحديث الخبر.');
+      if (response.data.success) {
+        setNews(news.map(item => 
+          item._id === id ? { ...item, ...editFormData } : item
+        ));
+        setEditingNews(null);
+        setError('');
+      } else {
+        setError(response.data.message || 'فشل في تحديث الخبر.');
+      }
+    } catch (error) {
+      console.error('فشل في تحديث الخبر:', error);
+      setError(error.response?.data?.message || 
+              error.message || 
+              'حدث خطأ أثناء تحديث الخبر.');
+      console.log('Full error:', error);
+      console.log('Request config:', error.config);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('فشل في تحديث الخبر:', error);
-    setError(error.response?.data?.message || 
-            error.message || 
-            'حدث خطأ أثناء تحديث الخبر.');
-    // Debugging: Log the full error and request details
-    console.log('Full error:', error);
-    console.log('Request config:', error.config);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
+
   const cancelEdit = () => {
     setEditingNews(null);
   };
 
+  // --- دوال التأكيد قبل الحذف ---
+
+  // هذه الدالة تعرض نافذة التأكيد (المودال)
   const handleDelete = (id) => {
     setNewsToDelete(id);
   };
 
-const handleDeleteNow = async (id) => {
-  try {
-    const res = await instanceAxios.delete(`/api/news/${id}`);
-    console.log('تم الحذف:', res.data);
-    setNews(prev => prev.filter(item => item._id !== id));
-  } catch (err) {
-    console.error('خطأ في الحذف:', err);
-  }
-};
+  // هذه الدالة تقوم بالحذف الفعلي بعد التأكيد من المستخدم
+  const confirmDelete = async () => {
+    if (newsToDelete) { // تأكد أن هناك خبر محدد للحذف
+      try {
+        const res = await instanceAxios.delete(`/api/news/${newsToDelete}`);
+        console.log('تم الحذف:', res.data);
+        // تحديث قائمة الأخبار بعد الحذف
+        setNews(prev => prev.filter(item => item._id !== newsToDelete));
+        setNewsToDelete(null); // إخفاء نافذة التأكيد بعد الحذف الناجح
+      } catch (err) {
+        console.error('خطأ في الحذف:', err);
+        setError(err.response?.data?.message || 'حدث خطأ أثناء الحذف.');
+      }
+    }
+  };
 
-
+  // هذه الدالة تلغي عملية الحذف وتخفي نافذة التأكيد
   const cancelDelete = () => {
     setNewsToDelete(null);
   };
+
+  // --- نهاية دوال التأكيد قبل الحذف ---
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -245,7 +234,7 @@ const handleDeleteNow = async (id) => {
                     <div>
                       <button
                         className="btn btn-sm btn-outline-danger me-2"
-                        onClick={() =>handleDeleteNow(item._id)}
+                        onClick={() => handleDelete(item._id)} {/* هنا يتم استدعاء دالة عرض التأكيد */}
                       >
                         حذف
                       </button>
@@ -267,6 +256,7 @@ const handleDeleteNow = async (id) => {
         ))
       )}
 
+      {/* --- نافذة التأكيد (Modal) تظهر فقط عند وجود newsToDelete --- */}
       {newsToDelete && (
         <div className="modal-backdrop show" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
           <div className="modal d-block" tabIndex="-1">
@@ -282,7 +272,7 @@ const handleDeleteNow = async (id) => {
                   <button className="btn btn-outline-secondary" onClick={cancelDelete}>
                     إلغاء
                   </button>
-                  <button className="btn btn-danger" onClick={confirmDelete}>
+                  <button className="btn btn-danger" onClick={confirmDelete}> {/* هنا يتم استدعاء دالة الحذف الفعلية */}
                     تأكيد الحذف
                   </button>
                 </div>
@@ -291,6 +281,7 @@ const handleDeleteNow = async (id) => {
           </div>
         </div>
       )}
+      {/* --- نهاية نافذة التأكيد (Modal) --- */}
     </div>
   );
 };
