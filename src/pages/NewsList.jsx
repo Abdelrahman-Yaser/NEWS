@@ -65,8 +65,20 @@ const NewsList = () => {
   };
 
   const saveEdit = async (id) => {
+    // --- بدء الفحص الجديد ---
+    const isTitleTaken = news.some(item => 
+      item._id !== id && item.title.toLowerCase() === editFormData.title.toLowerCase()
+    );
+
+    if (isTitleTaken) {
+      setError('عنوان الخبر هذا موجود بالفعل. الرجاء اختيار عنوان مختلف.');
+      return; // توقف العملية إذا كان العنوان موجودًا
+    }
+    // --- انتهاء الفحص الجديد ---
+
     try {
       setIsLoading(true);
+      setError(''); // مسح أي أخطاء سابقة قبل البدء في الحفظ
       const response = await instanceAxios.put(`/api/news/${id}`, editFormData, {
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +90,7 @@ const NewsList = () => {
           item._id === id ? { ...item, ...editFormData } : item
         ));
         setEditingNews(null);
-        setError('');
+        setError(''); // مسح الخطأ بعد الحفظ بنجاح
       } else {
         setError(response.data.message || 'فشل في تحديث الخبر.');
       }
@@ -96,6 +108,7 @@ const NewsList = () => {
 
   const cancelEdit = () => {
     setEditingNews(null);
+    setError(''); // مسح الخطأ عند إلغاء التعديل
   };
 
   // --- دوال التأكيد قبل الحذف ---
@@ -212,6 +225,10 @@ const NewsList = () => {
                       onChange={handleEditChange}
                     />
                   </div>
+                  {/* عرض رسالة الخطأ هنا إذا كان العنوان موجودًا */}
+                  {error && editingNews === item._id && (
+                    <div className="alert alert-warning mt-3">{error}</div>
+                  )}
                   <div className="d-flex justify-content-end">
                     <button 
                       className="btn btn-outline-secondary me-2"
